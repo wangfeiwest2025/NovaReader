@@ -11,7 +11,7 @@ interface LibraryViewProps {
 
 const LibraryView: React.FC<LibraryViewProps> = ({ books, onOpen, onDelete }) => {
   return (
-    <div className="p-8">
+    <div className="p-8 pb-32">
       <div className="flex justify-between items-center mb-10">
         <div>
           <h3 className="text-3xl font-black text-gray-900 tracking-tight">我的藏书</h3>
@@ -28,65 +28,82 @@ const LibraryView: React.FC<LibraryViewProps> = ({ books, onOpen, onDelete }) =>
            <p className="text-gray-400 text-sm mt-2">点击侧边栏添加书籍</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-6 gap-y-10">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-6 gap-y-12">
           {books.map((book) => (
             <div key={book.id} className="relative group animate-in fade-in slide-in-from-bottom-2 duration-300">
               
               <div className="flex flex-col h-full">
-                {/* 封面区域容器 */}
-                <div className="relative">
+                
+                {/* 
+                  卡片主体容器
+                  - 负责整体尺寸和圆角
+                  - 负责悬停时的上浮和阴影效果
+                  - 作为删除按钮的绝对定位参照物
+                */}
+                <div className="relative aspect-[3/4.2] rounded-2xl shadow-md transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-2 bg-gray-100 border border-gray-100">
                   
-                  {/* 可点击的封面 */}
+                  {/* 
+                     图片遮罩层
+                     - 负责图片的 overflow-hidden (缩放裁剪)
+                     - 负责触发“打开书籍”的点击
+                  */}
                   <div 
-                    className="aspect-[3/4.2] rounded-2xl shadow-md cursor-pointer overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 bg-gray-100 group-active:scale-95 z-0 relative"
+                    className="w-full h-full rounded-2xl overflow-hidden cursor-pointer relative"
                     onClick={() => onOpen(book)}
+                    title={`阅读 ${book.title}`}
                   >
+                    {/* 图片：利用 group-hover 实现缩放 */}
                     <img 
                       src={book.cover} 
                       alt={book.title} 
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 pointer-events-none"
                       loading="lazy"
                     />
                     
-                    {/* 格式标签 */}
-                    <div className="absolute top-2 left-2 z-10 bg-indigo-600/90 backdrop-blur-sm text-white text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-wider shadow-sm">
+                    {/* 视觉覆盖层 */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                    <div className="absolute top-2 left-2 z-10 bg-black/40 backdrop-blur-md text-white/90 text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-wider shadow-sm border border-white/10 pointer-events-none">
                       {book.format}
                     </div>
 
-                    {/* 悬停播放图标 */}
-                    <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                      <div className="w-12 h-12 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-indigo-600 shadow-2xl scale-0 group-hover:scale-100 transition-transform duration-300">
-                        <Play fill="currentColor" size={20} className="ml-1" />
-                      </div>
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                        <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/30 shadow-2xl">
+                          <Play fill="currentColor" size={20} className="ml-1" />
+                        </div>
                     </div>
                   </div>
 
-                  {/* 删除按钮 - 常驻显示，不再依赖 Hover */}
+                  {/* 
+                     删除按钮
+                     - 物理位置移出 overflow-hidden 的容器，放在主体容器内
+                     - 绝对定位到右上角
+                     - Z-index 设为 50 确保最高层级
+                  */}
                   <button 
                     type="button"
                     onClick={(e) => {
-                      e.preventDefault();
                       e.stopPropagation();
+                      e.preventDefault();
                       onDelete(book.id);
                     }}
-                    className="absolute -top-3 -right-3 z-50 w-8 h-8 bg-white text-gray-400 hover:text-white hover:bg-red-500 rounded-full flex items-center justify-center shadow-lg border border-gray-100 transition-all duration-200 cursor-pointer"
+                    className="absolute top-2 right-2 z-50 w-9 h-9 bg-white/90 backdrop-blur text-gray-500 hover:text-white hover:bg-red-500 rounded-xl flex items-center justify-center shadow-lg transition-all duration-200 cursor-pointer opacity-100 sm:opacity-0 group-hover:opacity-100 active:scale-90"
                     title="删除图书"
-                    aria-label="Delete book"
                   >
-                    <Trash2 size={14} />
+                    <Trash2 size={18} className="pointer-events-none" />
                   </button>
 
                 </div>
                 
-                {/* 文字信息 */}
-                <div className="mt-4 px-1">
+                {/* 底部文字信息 */}
+                <div className="mt-3 px-1">
                   <h4 
                     onClick={() => onOpen(book)}
-                    className="font-bold text-gray-900 line-clamp-2 text-[13px] leading-snug group-hover:text-indigo-600 transition-colors cursor-pointer"
+                    className="font-bold text-gray-900 line-clamp-2 text-[13px] leading-snug hover:text-indigo-600 transition-colors cursor-pointer"
                   >
                     {book.title}
                   </h4>
-                  <p className="text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-tight">{book.author}</p>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-tight truncate">{book.author}</p>
                 </div>
               </div>
             </div>

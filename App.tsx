@@ -89,36 +89,42 @@ const App: React.FC = () => {
    * 采用乐观更新策略：先删 UI，后异步删数据库，失败则回滚
    */
   const deleteBook = async (id: string) => {
-    console.log(`[App] Requesting delete for book ID: ${id}`);
     if (!window.confirm('确定要删除这本书吗？此操作不可撤销。')) return;
 
     const originalBooks = [...books];
-    // 1. 乐观更新 UI
-    setBooks(prev => prev.filter(b => b.id !== id));
+    const bookToDelete = books.find(b => b.id === id);
+
+    // 1. 如果正在阅读这本书，先退出阅读模式
     if (currentBook?.id === id) {
       setCurrentBook(null);
-      setActiveTab('library');
+      if (activeTab === 'reader') {
+        setActiveTab('library');
+      }
     }
 
+    // 2. 乐观更新 UI
+    setBooks(prev => prev.filter(b => b.id !== id));
+
     try {
-      // 2. 执行真正的数据库删除
+      // 3. 执行真正的数据库删除
       await deleteBookFromDB(id);
       console.log(`[App] 书籍 ${id} 已从数据库移除`);
     } catch (e) {
       console.error("[App] 数据库删除失败，执行 UI 回滚", e);
-      // 3. 失败则回滚
+      // 4. 失败则回滚
       setBooks(originalBooks);
+      if (bookToDelete && currentBook?.id === id) {
+        setCurrentBook(bookToDelete);
+      }
       alert("删除失败，数据库访问受限。书籍已恢复显示。");
     }
   };
 
   return (
     <div className="flex h-screen w-full bg-white text-gray-900">
-      {/* Hide sidebar on reader mode for full immersion? Optional, but here keeping it for navigation. */}
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onImport={handleFileImport} />
       
       <main className="flex-1 flex flex-col relative overflow-hidden bg-white">
-        {/* Only show the main Header if NOT in reader mode to save space */}
         {activeTab !== 'reader' && (
           <Header 
             activeTab={activeTab}
@@ -128,7 +134,6 @@ const App: React.FC = () => {
           />
         )}
         
-        {/* Use overflow-hidden for reader to let ReaderView handle scroll, overflow-auto for others */}
         <div className={`flex-1 ${activeTab === 'reader' ? 'overflow-hidden' : 'overflow-auto'} bg-[#fafafa]`}>
           {isLoading ? (
             <div className="flex flex-col items-center justify-center h-full gap-4">
@@ -150,16 +155,6 @@ const App: React.FC = () => {
           )}
         </div>
 
-        {/* AI Assistant button moved to ReaderView or accessible via shortcut? 
-            Currently Header has the button. 
-            If Header is hidden in Reader mode, we lose the AI button.
-            However, ReaderView doesn't have an AI button in its header in the new design.
-            We will rely on the AI Assistant being a slide-over. 
-            
-            Let's keep the Header logic simple for now: Reader gets max space.
-            If user needs AI, they can toggle it from Library or we add it to ReaderView later.
-            For now, let's inject a floating AI trigger in ReaderView if needed, or just let it close.
-        */}
         <AIAssistant 
           isOpen={isAiOpen} 
           onClose={() => setIsAiOpen(false)} 

@@ -120,6 +120,8 @@ const ReaderView: React.FC<ReaderViewProps> = ({ book, onBack }) => {
 
   // Parse FB2/TXT
   const parseContent = (content: string | ArrayBuffer) => {
+    // If content is ArrayBuffer (likely not detached here due to upstream checks, but safer to check or clone if needed)
+    // However, for TXT/FB2 we usually decode immediately in App or here.
     const text = typeof content === 'string' ? content : new TextDecoder("utf-8").decode(content);
     
     if (book.format === 'fb2') {
@@ -170,7 +172,10 @@ const ReaderView: React.FC<ReaderViewProps> = ({ book, onBack }) => {
           if (bookInstanceRef.current) await bookInstanceRef.current.destroy();
           while (!(window as any).ePub) { await new Promise(r => setTimeout(r, 100)); }
           
-          const epub = (window as any).ePub(book.content as ArrayBuffer);
+          // CRITICAL FIX: Clone ArrayBuffer to prevent it from becoming detached by ePub.js worker
+          const bookData = book.content instanceof ArrayBuffer ? book.content.slice(0) : book.content;
+          
+          const epub = (window as any).ePub(bookData);
           bookInstanceRef.current = epub;
           
           await new Promise(r => setTimeout(r, 100)); // Slight delay for DOM
@@ -220,7 +225,10 @@ const ReaderView: React.FC<ReaderViewProps> = ({ book, onBack }) => {
           const pdfjsLib = (window as any).pdfjsLib;
           pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
           
-          const loadingTask = pdfjsLib.getDocument({ data: book.content as ArrayBuffer });
+          // CRITICAL FIX: Clone ArrayBuffer to prevent it from becoming detached
+          const bookData = book.content instanceof ArrayBuffer ? book.content.slice(0) : book.content;
+          
+          const loadingTask = pdfjsLib.getDocument({ data: bookData });
           const doc = await loadingTask.promise;
           if (isMounted) {
             setPdfDoc(doc);
