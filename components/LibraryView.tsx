@@ -35,24 +35,20 @@ const LibraryView: React.FC<LibraryViewProps> = ({ books, onOpen, onDelete }) =>
               <div className="flex flex-col h-full">
                 
                 {/* 
-                  卡片主体容器
-                  - 负责整体尺寸和圆角
-                  - 负责悬停时的上浮和阴影效果
-                  - 作为删除按钮的绝对定位参照物
+                  Card Container
+                  Uses a relative wrapper to position children.
                 */}
                 <div className="relative aspect-[3/4.2] rounded-2xl shadow-md transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-2 bg-gray-100 border border-gray-100">
                   
                   {/* 
-                     图片遮罩层
-                     - 负责图片的 overflow-hidden (缩放裁剪)
-                     - 负责触发“打开书籍”的点击
+                     1. Book Cover & Open Action Layer
+                     This occupies the full space. Clicking here opens the book.
                   */}
                   <div 
-                    className="w-full h-full rounded-2xl overflow-hidden cursor-pointer relative"
+                    className="absolute inset-0 rounded-2xl overflow-hidden cursor-pointer z-0"
                     onClick={() => onOpen(book)}
                     title={`阅读 ${book.title}`}
                   >
-                    {/* 图片：利用 group-hover 实现缩放 */}
                     <img 
                       src={book.cover} 
                       alt={book.title} 
@@ -60,7 +56,6 @@ const LibraryView: React.FC<LibraryViewProps> = ({ books, onOpen, onDelete }) =>
                       loading="lazy"
                     />
                     
-                    {/* 视觉覆盖层 */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
                     <div className="absolute top-2 left-2 z-10 bg-black/40 backdrop-blur-md text-white/90 text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-wider shadow-sm border border-white/10 pointer-events-none">
@@ -75,27 +70,28 @@ const LibraryView: React.FC<LibraryViewProps> = ({ books, onOpen, onDelete }) =>
                   </div>
 
                   {/* 
-                     删除按钮
-                     - 物理位置移出 overflow-hidden 的容器，放在主体容器内
-                     - 绝对定位到右上角
-                     - Z-index 设为 50 确保最高层级
+                     2. Delete Button Layer
+                     Completely separate sibling, higher z-index (50).
+                     Explicit click handling with stopPropagation.
                   */}
-                  <button 
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      onDelete(book.id);
-                    }}
-                    className="absolute top-2 right-2 z-50 w-9 h-9 bg-white/90 backdrop-blur text-gray-500 hover:text-white hover:bg-red-500 rounded-xl flex items-center justify-center shadow-lg transition-all duration-200 cursor-pointer opacity-100 sm:opacity-0 group-hover:opacity-100 active:scale-90"
-                    title="删除图书"
-                  >
-                    <Trash2 size={18} className="pointer-events-none" />
-                  </button>
+                  <div className="absolute top-2 right-2 z-50">
+                    <button 
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        onDelete(book.id);
+                      }}
+                      className="w-9 h-9 bg-white/90 backdrop-blur text-gray-500 hover:text-white hover:bg-red-500 rounded-xl flex items-center justify-center shadow-lg transition-all duration-200 cursor-pointer opacity-100 sm:opacity-0 group-hover:opacity-100 active:scale-90"
+                      title="删除图书"
+                    >
+                      <Trash2 size={18} className="pointer-events-none" />
+                    </button>
+                  </div>
 
                 </div>
                 
-                {/* 底部文字信息 */}
+                {/* Footer Info */}
                 <div className="mt-3 px-1">
                   <h4 
                     onClick={() => onOpen(book)}

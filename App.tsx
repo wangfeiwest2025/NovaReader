@@ -8,6 +8,7 @@ import ReaderView from './components/ReaderView';
 import ConverterView from './components/ConverterView';
 import AIAssistant from './components/AIAssistant';
 import { getAllBooksFromDB, saveBookToDB, deleteBookFromDB } from './services/storage';
+import { AlertTriangle, X } from 'lucide-react';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'library' | 'reader' | 'converter'>('library');
@@ -15,6 +16,9 @@ const App: React.FC = () => {
   const [currentBook, setCurrentBook] = useState<Book | null>(null);
   const [isAiOpen, setIsAiOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Delete Confirmation State
+  const [bookToDelete, setBookToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     const loadBooks = async () => {
@@ -86,15 +90,25 @@ const App: React.FC = () => {
   };
 
   /**
-   * 采用乐观更新策略：先删 UI，后异步删数据库，失败则回滚
+   * Request deletion (Opens Modal)
    */
-  const deleteBook = async (id: string) => {
-    if (!window.confirm('确定要删除这本书吗？此操作不可撤销。')) return;
+  const requestDelete = (id: string) => {
+    setBookToDelete(id);
+  };
+
+  /**
+   * Execute actual deletion logic
+   */
+  const confirmDelete = async () => {
+    if (!bookToDelete) return;
+    
+    const id = bookToDelete;
+    setBookToDelete(null); // Close modal immediately
 
     const originalBooks = [...books];
-    const bookToDelete = books.find(b => b.id === id);
+    const targetBook = books.find(b => b.id === id);
 
-    // 1. 如果正在阅读这本书，先退出阅读模式
+    // 1. Exit reader if current book
     if (currentBook?.id === id) {
       setCurrentBook(null);
       if (activeTab === 'reader') {
@@ -102,19 +116,19 @@ const App: React.FC = () => {
       }
     }
 
-    // 2. 乐观更新 UI
+    // 2. Optimistic UI Update
     setBooks(prev => prev.filter(b => b.id !== id));
 
     try {
-      // 3. 执行真正的数据库删除
+      // 3. Database Deletion
       await deleteBookFromDB(id);
       console.log(`[App] 书籍 ${id} 已从数据库移除`);
     } catch (e) {
       console.error("[App] 数据库删除失败，执行 UI 回滚", e);
-      // 4. 失败则回滚
+      // 4. Rollback on failure
       setBooks(originalBooks);
-      if (bookToDelete && currentBook?.id === id) {
-        setCurrentBook(bookToDelete);
+      if (targetBook && currentBook?.id === id) {
+        setCurrentBook(targetBook);
       }
       alert("删除失败，数据库访问受限。书籍已恢复显示。");
     }
@@ -143,7 +157,7 @@ const App: React.FC = () => {
           ) : (
             <>
               {activeTab === 'library' && (
-                <LibraryView books={books} onOpen={openReader} onDelete={deleteBook} />
+                <LibraryView books={books} onOpen={openReader} onDelete={requestDelete} />
               )}
               {activeTab === 'reader' && currentBook && (
                 <ReaderView book={currentBook} onBack={() => setActiveTab('library')} />
@@ -160,6 +174,40 @@ const App: React.FC = () => {
           onClose={() => setIsAiOpen(false)} 
           contextBook={currentBook}
         />
+
+        {/* Custom Delete Confirmation Modal */}
+        {bookToDelete && (
+          <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/20 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4 transform transition-all scale-100 border border-gray-100">
+              <div className="flex items-center gap-3 text-red-600 mb-4">
+                <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+                  <AlertTriangle size={20} />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">删除书籍</h3>
+              </div>
+              
+              <p className="text-gray-500 mb-6 text-sm leading-relaxed">
+                您确定要永久删除这本书吗？<br/>此操作无法撤销，书籍数据将从本地存储中清除。
+              </p>
+              
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => setBookToDelete(null)}
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50 transition-colors"
+                >
+                  取消
+                </button>
+                <button 
+                  onClick={confirmDelete}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-700 transition-colors shadow-lg shadow-red-200"
+                >
+                  确认删除
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </main>
     </div>
   );
