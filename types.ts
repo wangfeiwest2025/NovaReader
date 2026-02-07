@@ -1,5 +1,5 @@
 
-export type BookFormat = 'epub' | 'pdf' | 'mobi' | 'fb2' | 'txt' | 'rtf';
+export type BookFormat = 'epub' | 'pdf' | 'mobi' | 'fb2' | 'txt' | 'rtf' | 'azw3';
 
 export interface Book {
   id: string;

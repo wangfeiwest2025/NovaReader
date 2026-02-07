@@ -37,7 +37,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onImport }) 
           ref={fileInputRef} 
           className="hidden" 
           multiple 
-          accept=".epub,.pdf,.mobi,.fb2,.txt,.rtf"
+          accept=".epub,.pdf,.mobi,.fb2,.txt,.rtf,.azw3"
           onChange={onImport}
         />
       </button>

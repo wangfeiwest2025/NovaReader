@@ -40,7 +40,7 @@ const App: React.FC = () => {
 
     Array.from(files).forEach((file: File) => {
       const format = file.name.split('.').pop()?.toLowerCase() as BookFormat;
-      if (!['epub', 'pdf', 'mobi', 'fb2', 'txt', 'rtf'].includes(format)) return;
+      if (!['epub', 'pdf', 'mobi', 'fb2', 'txt', 'rtf', 'azw3'].includes(format)) return;
 
       const reader = new FileReader();
       
