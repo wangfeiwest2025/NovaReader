@@ -1,17 +1,19 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NovaReader - AI E-Book Suite</title>
+    <meta name="description" content="Professional web-based e-book reader supporting EPUB, PDF, MOBI, FB2, TXT, and RTF with integrated Gemini AI for summaries.">
+    <meta name="keywords" content="e-book reader, online reader, epub, pdf, mobi, ai summary, book converter">
+    <link rel="canonical" href="https://novareader.cc.cd/" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
     <!-- 核心依赖 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js" crossorigin="anonymous"></script>
     <!-- PDF.js 支持 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
         .serif-font { font-family: 'Merriweather', serif; }
@@ -50,6 +52,5 @@
 </head>
 <body class="bg-gray-50 text-gray-900 h-screen overflow-hidden">
     <div id="root" class="h-full"></div>
-     <script type="module" src="/index.tsx"></script>
 </body>
 </html>

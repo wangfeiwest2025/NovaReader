@@ -83,7 +83,8 @@ const ConverterView: React.FC<ConverterViewProps> = ({ books }) => {
       setStatusMessage("Loading PDF document...");
       // @ts-ignore
       const pdfjsLib = window.pdfjsLib;
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+      // FIX: Use jsdelivr for worker to match the script tag and ensure accessibility
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.worker.min.js';
 
       const data = typeof content === 'string' 
         ? (new TextEncoder().encode(content)).buffer 

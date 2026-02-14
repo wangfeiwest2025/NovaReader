@@ -418,7 +418,9 @@ const ReaderView: React.FC<ReaderViewProps> = ({ book, onBack }) => {
 
         } else if (book.format === 'pdf') {
           const pdfjsLib = (window as any).pdfjsLib;
-          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+          // FIX: Use jsdelivr for worker to match the script tag and ensure accessibility
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.worker.min.js';
+          
           const bookData = book.content instanceof ArrayBuffer ? book.content.slice(0) : book.content;
           const loadingTask = pdfjsLib.getDocument({ data: bookData });
           const doc = await loadingTask.promise;
