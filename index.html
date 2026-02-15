@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>NovaReader - AI E-Book Suite | 在线电子书阅读器与转换器</title>
     
     <!-- Primary Meta Tags -->
@@ -13,6 +12,11 @@
     <meta name="author" content="NovaReader Team">
     <meta name="theme-color" content="#4f46e5">
     
+    <!-- Mobile App Experience -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
+
     <link rel="canonical" href="https://novareader.cc.cd/" />
 
     <!-- Open Graph / Facebook -->
@@ -23,69 +27,42 @@
     <meta property="og:image" content="https://images.unsplash.com/photo-1507842217153-e21f60d7cfbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630&q=80">
     <meta property="og:site_name" content="NovaReader">
 
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://novareader.cc.cd/">
-    <meta property="twitter:title" content="NovaReader - AI-Powered E-Book Reader">
-    <meta property="twitter:description" content="The best way to read and convert books online. Support for EPUB, PDF, MOBI and more with AI superpowers.">
-    <meta property="twitter:image" content="https://images.unsplash.com/photo-1507842217153-e21f60d7cfbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630&q=80">
-
-    <!-- Favicon (Inline SVG for performance) -->
+    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234f46e5'><path d='M2 6c0-1.1.9-2 2-2h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6zm2 0v12h16V6H4z'/></svg>" />
-
-    <!-- Structured Data (JSON-LD) for Search Engines -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "NovaReader",
-      "url": "https://novareader.cc.cd/",
-      "description": "Professional web-based e-book reader supporting EPUB, PDF, MOBI, FB2, TXT, and RTF with integrated Gemini AI.",
-      "applicationCategory": "ProductivityApplication",
-      "operatingSystem": "Web Browser",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "featureList": [
-        "EPUB/PDF/MOBI Reader",
-        "E-Book Format Converter",
-        "AI Book Summaries",
-        "Offline Reading Support"
-      ]
-    }
-    </script>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
     
-    <!-- 核心依赖 -->
+    <!-- Core Dependencies -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js" crossorigin="anonymous"></script>
-    <!-- PDF.js 支持 -->
     <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.min.js"></script>
     
     <style>
-        body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         .serif-font { font-family: 'Merriweather', serif; }
-        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
         
         .epub-container { height: 100%; width: 100%; display: flex; justify-content: center; }
-        .reader-paper { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
+        .reader-paper { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
         
-        /* PDF Canvas 容器样式 */
-        .pdf-canvas-wrapper {
-            transition: transform 0.2s ease-out;
-            transform-origin: top center;
-        }
-        
+        /* Safe Area Padding for mobile */
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+        .pt-safe { padding-top: env(safe-area-inset-top); }
+
         canvas {
             max-width: 100%;
             height: auto !important;
+        }
+
+        /* Prevent overscroll bounce on iOS */
+        html, body {
+            overflow: hidden;
+            height: 100%;
+            position: fixed;
+            width: 100%;
         }
     </style>
 <script type="importmap">
@@ -102,23 +79,8 @@
 }
 </script>
 </head>
-<body class="bg-gray-50 text-gray-900 h-screen overflow-hidden">
-    <div id="root" class="h-full">
-        <!-- Static Content for SEO Crawlers (Replaced by React) -->
-        <div style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">
-            <h1>NovaReader - Online E-Book Reader & Converter</h1>
-            <h2>Free Web EPUB, PDF, MOBI Reader</h2>
-            <p>NovaReader is a professional AI-powered e-book reader. Read EPUB, PDF, MOBI, FB2, TXT, RTF files online for free.</p>
-            <h3>Features:</h3>
-            <ul>
-                <li>Read EPUB, PDF, MOBI, AZW3, FB2 online</li>
-                <li>Convert eBooks to PDF and TXT</li>
-                <li>AI Summaries and Chat with Books</li>
-                <li>Offline support via IndexedDB</li>
-            </ul>
-            <p>免费的在线电子书阅读器，支持 PDF, EPUB, MOBI 格式转换。内置 AI 助手，帮助您快速提炼书籍摘要。</p>
-        </div>
-    </div>
+<body class="bg-gray-50 text-gray-900">
+    <div id="root" class="h-full"></div>
     <script type="module" src="/index.tsx"></script>
 </body>
 </html>
