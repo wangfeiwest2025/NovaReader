@@ -38,6 +38,10 @@ const ReaderView: React.FC<ReaderViewProps> = ({ book, onBack }) => {
   const viewerRef = useRef<HTMLDivElement>(null); 
   const resizeTimeoutRef = useRef<any>(null);
 
+  // Swipe State
+  const touchStartRef = useRef<{ x: number, y: number } | null>(null);
+  const minSwipeDistance = 50; // Minimum px to trigger swipe
+
   useEffect(() => { pageNumRef.current = pageNum; }, [pageNum]);
 
   const themeConfig = {
@@ -65,6 +69,37 @@ const ReaderView: React.FC<ReaderViewProps> = ({ book, onBack }) => {
        setTextPage(prev => Math.min(textTotalPages - 1, prev + 1));
     }
   }, [book.format, pdfDoc, textTotalPages]);
+
+  // Touch Handlers for React Container (PDF/TXT/Overlays)
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartRef.current = {
+      x: e.targetTouches[0].clientX,
+      y: e.targetTouches[0].clientY
+    };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    
+    const touchEnd = {
+      x: e.changedTouches[0].clientX,
+      y: e.changedTouches[0].clientY
+    };
+
+    const diffX = touchStartRef.current.x - touchEnd.x;
+    const diffY = touchStartRef.current.y - touchEnd.y;
+
+    // We require horizontal swipe to be dominant (to allow vertical scrolling in PDF/Lists)
+    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > minSwipeDistance) {
+       if (diffX > 0) {
+         nextPage(); // Swiped Left -> Next
+       } else {
+         prevPage(); // Swiped Right -> Prev
+       }
+    }
+    
+    touchStartRef.current = null;
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -175,15 +210,45 @@ const ReaderView: React.FC<ReaderViewProps> = ({ book, onBack }) => {
     const initReader = async () => {
       setEngineLoading(true); setError(null);
       try {
+        // Safe clone to prevent "detached ArrayBuffer" when libraries transfer ownership
+        const contentData = book.content instanceof ArrayBuffer 
+          ? book.content.slice(0) 
+          : book.content;
+
         if (book.format === 'epub') {
           if (bookInstanceRef.current) await bookInstanceRef.current.destroy();
           while (!(window as any).ePub) { await new Promise(r => setTimeout(r, 100)); }
-          const epub = (window as any).ePub(book.content);
+          const epub = (window as any).ePub(contentData);
           bookInstanceRef.current = epub;
           await new Promise(r => setTimeout(r, 100));
           if (!viewerRef.current) throw new Error("Container missing");
           const rendition = epub.renderTo(viewerRef.current, { width: '100%', height: '100%', flow: 'paginated', manager: 'default' });
           renditionRef.current = rendition;
+          
+          // --- EPUB Touch Handling (Inside Iframe) ---
+          rendition.on('touchstart', (e: any) => {
+             touchStartRef.current = { 
+               x: e.changedTouches[0].clientX, 
+               y: e.changedTouches[0].clientY 
+             };
+          });
+
+          rendition.on('touchend', (e: any) => {
+             if (!touchStartRef.current) return;
+             const touchEnd = {
+               x: e.changedTouches[0].clientX,
+               y: e.changedTouches[0].clientY
+             };
+             const diffX = touchStartRef.current.x - touchEnd.x;
+             const diffY = touchStartRef.current.y - touchEnd.y;
+             
+             if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+               if (diffX > 0) rendition.next();
+               else rendition.prev();
+             }
+             touchStartRef.current = null;
+          });
+
           await rendition.display();
           if (isMounted) setEngineLoading(false);
           rendition.on('relocated', (location: any) => {
@@ -197,14 +262,14 @@ const ReaderView: React.FC<ReaderViewProps> = ({ book, onBack }) => {
         } else if (book.format === 'pdf') {
           const pdfjsLib = (window as any).pdfjsLib;
           pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.worker.min.js';
-          const loadingTask = pdfjsLib.getDocument({ data: book.content });
+          const loadingTask = pdfjsLib.getDocument({ data: contentData });
           const doc = await loadingTask.promise;
           if (isMounted) { setPdfDoc(doc); setEngineLoading(false); setPageNum(1); }
         } else {
           // MOBI/TXT/FB2 etc...
           const text = (book.format === 'mobi' || book.format === 'azw3') 
-            ? await parseMobi(book.content as ArrayBuffer)
-            : typeof book.content === 'string' ? book.content : new TextDecoder().decode(book.content as ArrayBuffer);
+            ? await parseMobi(contentData as ArrayBuffer)
+            : typeof contentData === 'string' ? contentData : new TextDecoder().decode(contentData as ArrayBuffer);
           
           if (!isMounted) return;
           const parser = new DOMParser();
@@ -261,8 +326,12 @@ const ReaderView: React.FC<ReaderViewProps> = ({ book, onBack }) => {
         </div>
       </div>
 
-      {/* Reader Content */}
-      <div className="flex-1 relative overflow-hidden pt-14 md:pt-16 pb-safe">
+      {/* Reader Content - Attached Touch Handlers Here */}
+      <div 
+        className="flex-1 relative overflow-hidden pt-14 md:pt-16 pb-safe"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {engineLoading && (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-40 bg-inherit">
             <Loader2 size={32} className="animate-spin text-indigo-600 mb-2" />
