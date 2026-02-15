@@ -105,30 +105,69 @@ const ReaderView: React.FC<ReaderViewProps> = ({ book, onBack }) => {
     return () => observer.disconnect();
   }, [book.format, parsedElements, settings.fontSize, settings.lineHeight]);
 
-  const renderPdfPage = async (num: number, doc: any) => {
+  // --- PDF RENDERER IMPROVED ---
+  const renderPdfPage = useCallback(async (num: number, doc: any) => {
     if (!doc || !pdfCanvasRef.current) return;
     try {
       const page = await doc.getPage(num);
       const canvas = pdfCanvasRef.current;
       const context = canvas.getContext('2d');
       if (!context) return;
-      const viewport = page.getViewport({ scale: 1.5 });
-      const containerWidth = viewerRef.current?.parentElement?.clientWidth || window.innerWidth;
-      const targetWidth = Math.min(containerWidth - 32, 1000); 
-      const scale = targetWidth / viewport.width;
-      const scaledViewport = page.getViewport({ scale: scale * 1.5 }); 
-      canvas.height = scaledViewport.height;
-      canvas.width = scaledViewport.width;
-      canvas.style.width = "100%";
-      canvas.style.height = "auto";
-      await page.render({ canvasContext: context, viewport: scaledViewport }).promise;
+
+      // Get accurate container width
+      const container = canvas.parentElement || document.body;
+      const containerWidth = container.clientWidth;
+      
+      // Calculate logical target width (responsive, max 1000px)
+      const targetWidth = Math.min(containerWidth - 24, 1000); 
+      
+      const unscaledViewport = page.getViewport({ scale: 1 });
+      const scaleFactor = targetWidth / unscaledViewport.width;
+
+      // High DPI (Retina) Support
+      // Force at least 2.0 scale for sharp text on standard screens too
+      const dpr = window.devicePixelRatio || 1;
+      const renderScale = Math.max(dpr, 2.0); 
+
+      // Create viewport at High Res
+      const viewport = page.getViewport({ scale: scaleFactor * renderScale });
+
+      // Set physical dimensions (High Res)
+      canvas.width = Math.floor(viewport.width);
+      canvas.height = Math.floor(viewport.height);
+
+      // Set CSS dimensions (Logical Size)
+      canvas.style.width = `${Math.floor(viewport.width / renderScale)}px`;
+      canvas.style.height = `${Math.floor(viewport.height / renderScale)}px`;
+
+      const renderContext = {
+        canvasContext: context,
+        viewport: viewport,
+      };
+      
+      await page.render(renderContext).promise;
       setCurrentPage({ current: num, total: doc.numPages, label: `${num} / ${doc.numPages}` });
     } catch (err) { console.error(err); }
-  };
+  }, []);
 
+  // Trigger PDF Render on Page Change
   useEffect(() => {
     if (book.format === 'pdf' && pdfDoc) renderPdfPage(pageNum, pdfDoc);
-  }, [pageNum, pdfDoc]);
+  }, [pageNum, pdfDoc, renderPdfPage, book.format]);
+
+  // Trigger PDF Render on Window Resize
+  useEffect(() => {
+    if (book.format !== 'pdf' || !pdfDoc) return;
+    const handleResize = () => {
+       if (resizeTimeoutRef.current) clearTimeout(resizeTimeoutRef.current);
+       resizeTimeoutRef.current = setTimeout(() => {
+          renderPdfPage(pageNumRef.current, pdfDoc);
+       }, 200);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [book.format, pdfDoc, renderPdfPage]);
+
 
   // Init Engine Effect
   useEffect(() => {
