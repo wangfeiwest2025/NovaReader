@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NovaReader - AI E-Book Suite | 在线电子书阅读器与转换器</title>
     
-    <!-- Primary Meta Tags -->
-    <meta name="title" content="NovaReader - AI E-Book Suite">
-    <meta name="description" content="Free online e-book reader & converter. Support EPUB, PDF, MOBI, FB2, TXT. Features AI summaries, format conversion, and cross-device sync. 免费在线电子书阅读器，支持多格式转换与AI智能导读。">
-    <meta name="keywords" content="e-book reader, online reader, epub web viewer, pdf tools, mobi to pdf, ai book summary, 电子书阅读器, 在线阅读, 格式转换, EPUB转PDF, AI读书助手, 免费小说阅读器">
+    <!-- SEO: Optimized Title and Description -->
+    <title>NovaReader - Free Online AI E-Book Reader & Converter (EPUB, PDF, MOBI)</title>
+    <meta name="title" content="NovaReader - Free Online AI E-Book Reader & Converter (EPUB, PDF, MOBI)">
+    <meta name="description" content="Read and convert EPUB, PDF, MOBI, FB2, and TXT files online for free. NovaReader integrates Google Gemini AI to provide instant book summaries, deep insights, and translations. No installation required. works on mobile and desktop.">
+    <meta name="keywords" content="online epub reader, pdf converter, mobi reader, ai book summary, electronic book viewer, epub to pdf, gemini ai reader, free ebook tools, 在线电子书阅读器, 格式转换, AI读书助手">
     <meta name="author" content="NovaReader Team">
     <meta name="theme-color" content="#4f46e5">
+    <meta name="robots" content="index, follow">
     
     <!-- Mobile App Experience -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -23,15 +24,41 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://novareader.cc.cd/">
     <meta property="og:title" content="NovaReader - AI-Powered E-Book Reader & Converter">
-    <meta property="og:description" content="Read and convert EPUB, PDF, MOBI files online. Integrated Gemini AI for instant book summaries and insights. No installation required.">
+    <meta property="og:description" content="The smartest way to read online. Support for EPUB, PDF, MOBI with built-in AI assistant for summaries and Q&A. Try it for free.">
     <meta property="og:image" content="https://images.unsplash.com/photo-1507842217153-e21f60d7cfbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630&q=80">
     <meta property="og:site_name" content="NovaReader">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://novareader.cc.cd/">
+    <meta property="twitter:title" content="NovaReader - AI-Powered E-Book Reader & Converter">
+    <meta property="twitter:description" content="Read EPUB/PDF/MOBI online with AI superpowers. Get summaries, ask questions, and convert formats instantly.">
+    <meta property="twitter:image" content="https://images.unsplash.com/photo-1507842217153-e21f60d7cfbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630&q=80">
+
+    <!-- JSON-LD Structured Data for Google Rich Snippets -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "NovaReader",
+      "operatingSystem": "Web",
+      "applicationCategory": "ReferenceApplication",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "description": "A comprehensive online e-book reader and converter supporting EPUB, PDF, MOBI, FB2, and TXT formats. Features integrated AI for text analysis and summarization.",
+      "featureList": "Read EPUB/PDF/MOBI online, Convert eBook formats, AI Book Summaries, Cross-device synchronization, Offline capabilities",
+      "browserRequirements": "Requires JavaScript. Works in Chrome, Firefox, Safari, Edge."
+    }
+    </script>
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234f46e5'><path d='M2 6c0-1.1.9-2 2-2h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6zm2 0v12h16V6H4z'/></svg>" />
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
     
     <!-- Core Dependencies -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js" crossorigin="anonymous"></script>
@@ -64,6 +91,19 @@
             position: fixed;
             width: 100%;
         }
+
+        /* SEO Content Hidden from visual user but available for initial paint */
+        #seo-content {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0,0,0,0);
+            white-space: nowrap;
+            border: 0;
+        }
     </style>
 <script type="importmap">
 {
@@ -80,7 +120,30 @@
 </script>
 </head>
 <body class="bg-gray-50 text-gray-900">
-    <div id="root" class="h-full"></div>
+    <div id="root" class="h-full">
+        <!-- SEO Pre-rendered Content: Google reads this before React loads -->
+        <div class="flex flex-col items-center justify-center h-full p-8 text-center space-y-6">
+            <h1 class="text-4xl font-black text-indigo-900">NovaReader: Online AI E-Book Reader & Converter</h1>
+            <p class="text-lg text-gray-600 max-w-2xl">
+                The ultimate free online tool to read and convert EPUB, PDF, MOBI, FB2, TXT, and RTF files. 
+                Experience the power of Gemini AI for instant book summaries, chapter analysis, and translations directly in your browser.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-left max-w-4xl mt-8">
+                <div class="p-4 bg-white rounded-xl shadow-sm">
+                    <h2 class="font-bold text-indigo-600">Universal Format Support</h2>
+                    <p class="text-sm text-gray-500">Seamlessly read EPUB, PDF, MOBI, AZW3, FB2, and TXT files without installing any software.</p>
+                </div>
+                <div class="p-4 bg-white rounded-xl shadow-sm">
+                    <h2 class="font-bold text-indigo-600">AI-Powered Insights</h2>
+                    <p class="text-sm text-gray-500">Get instant summaries, ask questions about the plot, and analyze characters using Google Gemini AI.</p>
+                </div>
+                <div class="p-4 bg-white rounded-xl shadow-sm">
+                    <h2 class="font-bold text-indigo-600">Free Format Converter</h2>
+                    <p class="text-sm text-gray-500">Convert your e-books to PDF or TXT format easily. Fast, secure, and runs entirely in your browser.</p>
+                </div>
+            </div>
+        </div>
+    </div>
     <script type="module" src="/index.tsx"></script>
 </body>
 </html>

@@ -38,9 +38,9 @@ const ReaderView: React.FC<ReaderViewProps> = ({ book, onBack }) => {
   const viewerRef = useRef<HTMLDivElement>(null); 
   const resizeTimeoutRef = useRef<any>(null);
 
-  // Swipe State
+  // --- 触摸滑动状态 ---
   const touchStartRef = useRef<{ x: number, y: number } | null>(null);
-  const minSwipeDistance = 50; // Minimum px to trigger swipe
+  const minSwipeDistance = 50; // 最小滑动距离触发翻页
 
   useEffect(() => { pageNumRef.current = pageNum; }, [pageNum]);
 
@@ -70,7 +70,7 @@ const ReaderView: React.FC<ReaderViewProps> = ({ book, onBack }) => {
     }
   }, [book.format, pdfDoc, textTotalPages]);
 
-  // Touch Handlers for React Container (PDF/TXT/Overlays)
+  // --- 触摸处理逻辑 (React 容器) ---
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartRef.current = {
       x: e.targetTouches[0].clientX,
@@ -89,12 +89,12 @@ const ReaderView: React.FC<ReaderViewProps> = ({ book, onBack }) => {
     const diffX = touchStartRef.current.x - touchEnd.x;
     const diffY = touchStartRef.current.y - touchEnd.y;
 
-    // We require horizontal swipe to be dominant (to allow vertical scrolling in PDF/Lists)
+    // 确保是水平滑动 (X轴位移 > Y轴位移) 且距离足够
     if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > minSwipeDistance) {
        if (diffX > 0) {
-         nextPage(); // Swiped Left -> Next
+         nextPage(); // 向左滑 -> 下一页
        } else {
-         prevPage(); // Swiped Right -> Prev
+         prevPage(); // 向右滑 -> 上一页
        }
     }
     
@@ -225,7 +225,7 @@ const ReaderView: React.FC<ReaderViewProps> = ({ book, onBack }) => {
           const rendition = epub.renderTo(viewerRef.current, { width: '100%', height: '100%', flow: 'paginated', manager: 'default' });
           renditionRef.current = rendition;
           
-          // --- EPUB Touch Handling (Inside Iframe) ---
+          // --- EPUB 内部触摸事件绑定 ---
           rendition.on('touchstart', (e: any) => {
              touchStartRef.current = { 
                x: e.changedTouches[0].clientX, 
@@ -242,6 +242,7 @@ const ReaderView: React.FC<ReaderViewProps> = ({ book, onBack }) => {
              const diffX = touchStartRef.current.x - touchEnd.x;
              const diffY = touchStartRef.current.y - touchEnd.y;
              
+             // 逻辑同外层：水平位移 > 垂直位移 且 > 阈值
              if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
                if (diffX > 0) rendition.next();
                else rendition.prev();
@@ -326,7 +327,7 @@ const ReaderView: React.FC<ReaderViewProps> = ({ book, onBack }) => {
         </div>
       </div>
 
-      {/* Reader Content - Attached Touch Handlers Here */}
+      {/* Reader Content - 绑定外层触摸事件 */}
       <div 
         className="flex-1 relative overflow-hidden pt-14 md:pt-16 pb-safe"
         onTouchStart={handleTouchStart}
@@ -339,7 +340,7 @@ const ReaderView: React.FC<ReaderViewProps> = ({ book, onBack }) => {
           </div>
         )}
 
-        {/* Navigation Layers (Hidden visually on mobile, but clickable) */}
+        {/* Navigation Layers (视觉上隐藏，保留点击功能) */}
         {!engineLoading && !error && (
           <>
             <div onClick={prevPage} className="absolute left-0 top-0 bottom-0 w-[20%] z-30 cursor-pointer active:bg-black/5 group/left flex items-center justify-center">
@@ -386,14 +387,12 @@ const ReaderView: React.FC<ReaderViewProps> = ({ book, onBack }) => {
         </div>
       </div>
 
-      {/* Settings Panel - Bottom Sheet for Mobile, Floating for Desktop */}
+      {/* Settings Panel */}
       {showSettings && (
         <>
-          {/* Backdrop for mobile */}
           <div className="md:hidden fixed inset-0 bg-black/40 z-[55] animate-in fade-in" onClick={() => setShowSettings(false)} />
           
           <div className="fixed md:absolute bottom-0 md:bottom-auto md:top-16 right-0 md:right-6 left-0 md:left-auto w-full md:w-80 bg-white md:bg-white/95 backdrop-blur-2xl shadow-2xl rounded-t-3xl md:rounded-2xl p-6 md:p-8 z-[60] border-t md:border border-gray-100 animate-in slide-in-from-bottom md:slide-in-from-top-4 duration-300">
-            {/* Handle for mobile */}
             <div className="md:hidden w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6" />
             
             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 mb-6">Reading Settings</h4>
@@ -438,7 +437,6 @@ const ReaderView: React.FC<ReaderViewProps> = ({ book, onBack }) => {
               )}
             </div>
 
-            {/* Close for mobile */}
             <button 
               onClick={() => setShowSettings(false)}
               className="md:hidden w-full mt-8 py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg shadow-indigo-100"
