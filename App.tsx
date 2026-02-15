@@ -7,6 +7,7 @@ import LibraryView from './components/LibraryView';
 import ReaderView from './components/ReaderView';
 import ConverterView from './components/ConverterView';
 import AIAssistant from './components/AIAssistant';
+import InfoModal, { InfoType } from './components/InfoModal';
 import { getAllBooksFromDB, saveBookToDB, deleteBookFromDB } from './services/storage';
 import { AlertTriangle } from 'lucide-react';
 
@@ -17,7 +18,9 @@ const App: React.FC = () => {
   const [isAiOpen, setIsAiOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
+  // Modal State
   const [bookToDelete, setBookToDelete] = useState<string | null>(null);
+  const [infoModalType, setInfoModalType] = useState<InfoType>(null);
 
   useEffect(() => {
     const loadBooks = async () => {
@@ -119,7 +122,12 @@ const App: React.FC = () => {
           ) : (
             <>
               {activeTab === 'library' && (
-                <LibraryView books={books} onOpen={openReader} onDelete={setBookToDelete} />
+                <LibraryView 
+                  books={books} 
+                  onOpen={openReader} 
+                  onDelete={setBookToDelete} 
+                  onOpenInfo={setInfoModalType}
+                />
               )}
               {activeTab === 'reader' && currentBook && (
                 <ReaderView book={currentBook} onBack={() => setActiveTab('library')} />
@@ -137,6 +145,9 @@ const App: React.FC = () => {
           onClose={() => setIsAiOpen(false)} 
           contextBook={currentBook}
         />
+
+        {/* Legal Info Modal */}
+        <InfoModal type={infoModalType} onClose={() => setInfoModalType(null)} />
 
         {/* Delete Modal */}
         {bookToDelete && (
